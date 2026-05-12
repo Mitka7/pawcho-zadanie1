@@ -26,16 +26,39 @@ ssh-add -l
 
 Uruchomiono agenta SSH i dodano klucz prywatny do pamięci lokalnej komputera. Dzięki temu mechanizm BuildKit może pobrać kod źródłowy przez SSH, nie zapisując przy tym na stałe żadnych kluczy ani haseł wewnątrz tworzonego kontenera.
 
-
-
-```
-docker scout cves p-app-minimal:latest
-```
+## Inicjalizacja lokalnego repozytorium Git
 
 ```
-docker scout cves p-app-minimal:latest
+git init
 ```
 
 ```
-docker scout cves p-app-minimal:latest
+git add server.c Dockerfile
 ```
+
+```
+git commit -m " Dodanie kodu serwera i pliku Dockerfile z części obowiązkowej zadania 1 "
+```
+
+```
+git branch -M main 
+```
+<img width="945" height="293" alt="image" src="https://github.com/user-attachments/assets/cf8f8df6-df00-4469-837d-7afc9ec57f49" />
+
+W folderze projektu zainicjowano lokalne repozytorium Git. Do indeksu dodano pliki źródłowe (server.c oraz Dockerfile), a następnie utworzono pierwszy commit (zatwierdzenie zmian). Nazwa głównej gałęzi została ustawiona na main. 
+
+## Publikacja kodu na GitHubie
+
+```
+gh auth status
+```
+
+```
+gh repo create pawcho-zadanie1 --public --source=. --remote=origin –push
+```
+
+<img width="945" height="443" alt="image" src="https://github.com/user-attachments/assets/89aee963-e072-4389-9fa7-767e4a7faf72" />
+
+Za pomocą narzędzia GitHub CLI (gh) utworzono publiczne repozytorium zdalne i przesłano do niego lokalne pliki projektu. Operacja ta udostępniła kod źródłowy dla silnika BuildKit, co jest kluczowe dla realizacji mechanizmu mount=type=ssh. Dzięki temu pliki serwera będą pobierane bezpośrednio z GitHuba w trakcie tworzenia obrazu, co zapewnia spójność i automatyzację procesu budowania.
+
+
