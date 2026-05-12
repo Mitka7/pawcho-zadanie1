@@ -61,19 +61,29 @@ gh repo create pawcho-zadanie1 --public --source=. --remote=origin –push
 
 Za pomocą narzędzia GitHub CLI (gh) utworzono publiczne repozytorium zdalne i przesłano do niego lokalne pliki projektu. Operacja ta udostępniła kod źródłowy dla silnika BuildKit, co jest kluczowe dla realizacji mechanizmu mount=type=ssh. Dzięki temu pliki serwera będą pobierane bezpośrednio z GitHuba w trakcie tworzenia obrazu, co zapewnia spójność i automatyzację procesu budowania.
 
-##
+## Budowa obrazu wieloarchitekturowego z wykorzystaniem SSH Mount i eksportem Cache
 ```
-gh repo create pawcho-zadanie1 --public --source=. --remote=origin –push
+docker buildx build --platform linux/amd64,linux/arm64 -t docker.io/mitka7/pawcho-zadanie1:lab8 --ssh default=$HOME/.ssh/gh_lab666_ed25 --push --cache-to type=registry,ref=mitka7/pawcho-zadanie1:cache,mode=max --cache-from type=registry,ref=mitka7/pawcho-zadanie1:cache .
+
+```
+<img width="632" height="1060" alt="image" src="https://github.com/user-attachments/assets/e6ea42b0-44fd-4d01-bb3f-00d742cf4f62" />
+
+Główny etap realizacji zadania, polegający na jednoczesnym przygotowaniu obrazów dla architektur linux/amd64 oraz linux/arm64. W procesie wykorzystano zaawansowaną funkcję --mount=type=ssh, która pozwala na bezpieczne klonowanie prywatnego repozytorium GitHub wewnątrz kontenera budującego, bez kopiowania kluczy SSH do warstw obrazu. Skonfigurowano również zewnętrzny backend pamięci podręcznej (cache) w trybie max, co umożliwia przechowywanie kompletnego stanu środowiska kompilacji skrośnej bezpośrednio w rejestrze Docker Hub.
+
+## Weryfikacja struktury manifestu wieloarchitekturowego
+```
+docker buildx imagetools inspect mitka7/pawcho-zadanie1:lab8
+```
+<img width="933" height="585" alt="image" src="https://github.com/user-attachments/assets/7ae25111-fa32-4e8c-8059-d123d99053cd" />
+
+Wykorzystanie narzędzia docker buildx imagetools inspect w celu potwierdzenia poprawnej publikacji obrazu. Polecenie to weryfikuje tzw. Manifest List, czyli strukturę, która informuje klienta o dostępności różnych wersji binarnych pod jednym wspólnym tagiem. Wynik polecenia stanowi dowód na to, że obraz jest gotowy do uruchomienia zarówno na tradycyjnych serwerach x86, jak i na energooszczędnych układach ARM64.
+
+## Test efektywności mechanizmu Cache (Ponowne budowanie)
+```
+docker buildx build --platform linux/amd64,linux/arm64 -t docker.io/mitka7/pawcho-zadanie1:lab8 --ssh default=$HOME/.ssh/gh_lab666_ed25 --push --cache-to type=registry,ref=mitka7/pawcho-zadanie1:cache,mode=max --cache-from type=registry,ref=mitka7/pawcho-zadanie1:cache .
 ```
 
-##
-```
-gh repo create pawcho-zadanie1 --public --source=. --remote=origin –push
-```
+<img width="628" height="936" alt="image" src="https://github.com/user-attachments/assets/76dbb524-5d65-4495-844b-2ce220025a8f" />
 
-##
-```
-gh repo create pawcho-zadanie1 --public --source=. --remote=origin –push
-```
-
+Poprawne wykorzystanie warstw cache zostało zweryfikowane poprzez ponowne uruchomienie procesu budowania. System BuildKit rozpoznał istniejące warstwy w zdalnym rejestrze (importing cache manifest), co pozwoliło na pominięcie powtarzalnych etapów (instalacja narzędzi, kompilacja) i skrócenie czasu budowania z kilku minut do kilkunastu sekund (status CACHED w logach).
 
