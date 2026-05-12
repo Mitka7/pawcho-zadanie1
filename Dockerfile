@@ -5,7 +5,7 @@
 # - działające natywnie na architekturze hosta (--platform=$BUILDPLATFORM)
 FROM --platform=$BUILDPLATFORM alpine:latest AS builder
 
-# Instalacja narzędzi do pobierania kodu (Git/SSH), kompilacji (GCC/musl) oraz optymalizacji binarnej (UPX)
+# Instalacja narzędzi do pobierania kodu (Git/SSH) oraz optymalizacji binarnej (UPX)
 # clang i lld są wymagane przez 'xx' do sprawnej kompilacji międzyplatformowej
 RUN apk add --no-cache clang lld git openssh-client upx
 
