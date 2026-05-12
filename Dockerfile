@@ -1,28 +1,51 @@
-# ETAP 1: Środowisko budujące (wykorzystanie Alpine z kompilatorem gcc i biblioteką musl)
-FROM alpine:latest AS builder
+# syntax=docker/dockerfile:1
+# Dyrektywa określająca wersję składni BuildKit niezbędną do obsługi zaawansowanych funkcji (np. --mount).
 
-# Instalacja kompilatora gcc oraz kompresora UPX
-RUN apk add --no-cache gcc musl-dev upx
+# ETAP 1: Środowisko budujące (wykorzystanie Alpine z kompilatorem gcc i biblioteką musl)
+# - działające natywnie na architekturze hosta (--platform=$BUILDPLATFORM)
+FROM --platform=$BUILDPLATFORM alpine:latest AS builder
+
+# Instalacja narzędzi do pobierania kodu (Git/SSH), kompilacji (GCC/musl) oraz optymalizacji binarnej (UPX)
+# clang i lld są wymagane przez 'xx' do sprawnej kompilacji międzyplatformowej
+RUN apk add --no-cache clang lld git openssh-client upx
+
+# Instalacja 'xx' - profesjonalnych skryptów pomocniczych do kompilacji skrośnej
+COPY --from=tonistiigi/xx / /
+
+# Argumenty BuildKit niezbędne do poprawnej obsługi kompilacji skrośnej
+ARG TARGETPLATFORM
+
+# Narzędzie xx-apk automatycznie pobierze 'musl-dev' dla amd64 oraz arm64
+RUN xx-apk add --no-cache musl-dev gcc
 
 # Katalog roboczy
 WORKDIR /app
 
-# Optymalizacja cache: Kopiowanie kodu aplikacji przed kompilacją
-COPY server.c .
+# Konfiguracja SSH dla GitHuba (keyscan zapobiega interaktywnym pytaniom o zaufany host)
+RUN mkdir -p -m 0700 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
 
-# Kompilacja i kompresja (jedna zoptymalizowana warstwa)
+# Pobranie kodu przez bezpieczny kanał SSH
+RUN --mount=type=ssh \
+    git clone git@github.com:Mitka7/pawcho-zadanie1.git .
+
+
+# Kompilacja KRZYŻOWA (Cross-compilation) za pomocą xx-clang
 # -Os: optymalizacja pod rozmiar pliku (wyłącz te optymalizacje, które zwiększają rozmiar pliku)
 # -static: statyczne linkowanie (wymóg dla obrazu scratch)
 # -ffunction-sections -fdata-sections -Wl,--gc-sections: usuwanie nieużywanego kodu z binarki
 # upx --best --lzma: kompresowanie gotowego pliku binarnego do absolutnego minimum
-RUN gcc -Os -static -s -ffunction-sections -fdata-sections -Wl,--gc-sections server.c -o server && \
+RUN xx-clang -Os -static -s -ffunction-sections -fdata-sections -Wl,--gc-sections server.c -o server && \
+    xx-verify server && \
     upx --best --lzma server
 
 # ETAP 2: Docelowy obraz
 FROM scratch
 
 # Informacje o autorze zgodne ze standardem OCI
+LABEL org.opencontainers.image.source="https://github.com/Mitka7/pawcho-zadanie1"
+LABEL org.opencontainers.image.description="Serwer WWW pogody (Wersja Multi-arch + SSH)"
 LABEL org.opencontainers.image.authors="Weronika Mitaszka <s101631@pollub.edu.pl>"
+
 
 # Kopiowanie skompresowanego pliku - jedyna fizyczna warstwa obrazu
 COPY --from=builder /app/server /server
