@@ -61,4 +61,19 @@ gh repo create pawcho-zadanie1 --public --source=. --remote=origin –push
 
 Za pomocą narzędzia GitHub CLI (gh) utworzono publiczne repozytorium zdalne i przesłano do niego lokalne pliki projektu. Operacja ta udostępniła kod źródłowy dla silnika BuildKit, co jest kluczowe dla realizacji mechanizmu mount=type=ssh. Dzięki temu pliki serwera będą pobierane bezpośrednio z GitHuba w trakcie tworzenia obrazu, co zapewnia spójność i automatyzację procesu budowania.
 
+##
+```
+gh repo create pawcho-zadanie1 --public --source=. --remote=origin –push
+```
+
+##
+```
+gh repo create pawcho-zadanie1 --public --source=. --remote=origin –push
+```
+
+##
+```
+gh repo create pawcho-zadanie1 --public --source=. --remote=origin –push
+```
+
 
