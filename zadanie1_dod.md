@@ -14,16 +14,19 @@ Osiągnięcie tak wysokiego poziomu bezpieczeństwa wynika z zastosowania obrazu
 
 ```
 eval "$(ssh-agent -s)"
+```
+```
 ssh-add ~/.ssh/gh_lab666_ed25
+```
+```
 ssh-add -l
 ```
+
 <img width="945" height="249" alt="image" src="https://github.com/user-attachments/assets/091483b8-8d3c-42fc-b11a-fc876294f427" />
 
 Uruchomiono agenta SSH i dodano klucz prywatny do pamięci lokalnej komputera. Dzięki temu mechanizm BuildKit może pobrać kod źródłowy przez SSH, nie zapisując przy tym na stałe żadnych kluczy ani haseł wewnątrz tworzonego kontenera.
 
-```
-docker scout cves p-app-minimal:latest
-```
+
 
 ```
 docker scout cves p-app-minimal:latest
